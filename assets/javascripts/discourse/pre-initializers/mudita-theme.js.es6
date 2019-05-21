@@ -2,11 +2,17 @@ import computed from "ember-addons/ember-computed-decorators"
 import Category from "discourse/models/category"
 import Topic from "discourse/models/topic"
 import { ajax } from "discourse/lib/ajax"
+import mobile from "discourse/lib/mobile"
 
 export default {
   name: "mudita-theme",
   before: "inject-discourse-objects",
   initialize () {
+    // Disable script checking if device is mobile or not
+    mobile.init = () => {
+      // overwrite init function
+    }
+
     // Categories list plugins
     Category.reopen({
       // Category's last activity
