@@ -1,5 +1,8 @@
+import UserAccount from "discourse/controllers/preferences/account"
 import computed from "ember-addons/ember-computed-decorators"
+import { popupAjaxError } from "discourse/lib/ajax-error"
 import Category from "discourse/models/category"
+import { cookAsync } from "discourse/lib/text"
 import Topic from "discourse/models/topic"
 import { ajax } from "discourse/lib/ajax"
 import mobile from "discourse/lib/mobile"
@@ -12,6 +15,44 @@ export default {
     mobile.init = () => {
       // overwrite init function
     }
+
+    UserAccount.reopen({
+      saveAttrNames: ["name", "title", "website", "location", "bio_raw", "custom_fields", "user_fields"],
+      newBioInput: null,
+      actions: {
+        save () {
+          this.set("saved", false)
+
+          const model = this.get("model")
+          const userFields = this.get("userFields")
+
+          model.set("name", this.get("newNameInput"))
+          model.set("title", this.get("newTitleInput"))
+
+          // Update the user fields
+          if (!Ember.isEmpty(userFields)) {
+            const modelFields = model.get("user_fields")
+            if (!Ember.isEmpty(modelFields)) {
+              userFields.forEach(function (uf) {
+                modelFields[uf.get("field.id").toString()] = uf.get("value")
+              })
+            }
+          }
+
+          return model
+            .save(this.get("saveAttrNames"))
+            .then(() => {
+              cookAsync(model.get("bio_raw"))
+                .then(() => {
+                  model.set("bio_cooked")
+                  this.set("saved", true)
+                })
+                .catch(popupAjaxError)
+            })
+            .catch(popupAjaxError)
+        }
+      }
+    })
 
     // Categories list plugins
     Category.reopen({
