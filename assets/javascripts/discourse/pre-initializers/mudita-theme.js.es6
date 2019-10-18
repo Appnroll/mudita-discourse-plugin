@@ -30,7 +30,7 @@ export default {
           const diff = new Date().getTime() - lastBump
           const daysDiff = diff / 1000 / 60 / 60 / 24
           const date = new Date(lastBump)
-          const time = `${date.getHours()}:${date.getMinutes()}`
+          const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`
 
           if (daysDiff < 1) {
             text = `Today, ${time}`
